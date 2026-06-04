@@ -72,6 +72,19 @@ glucose down, short-term slope falling"), with a faithfulness check at 0.977 to 
 the explanation matches what the model actually did. That number is the whole argument
 against attention heatmaps in one line: I can measure whether my explanation is true.
 
+**Evaluated like a clinical tool, not a leaderboard.** RMSE never tells you whether an
+error is dangerous, so the last piece was the metrics a clinician would recognise. On
+the Clarke error grid the model lands 97% of its predictions in the clinically
+acceptable A and B zones, with only 3% in the dangerous zones. For catching real hypo
+and hyper events it hits 78% sensitivity at a 1% false-alarm rate, and the false-alarm
+number is the one I care about most: a model that cries wolf gets switched off, and 1%
+is the difference between a tool people trust and one they mute. The honest gap is
+lead-time; it mostly flags imminent events rather than distant ones, which is the next
+thing to push. But watching the same model that was most accurate, most interpretable,
+and best calibrated also land 97% in the safe zones is the moment MedMaps stopped
+feeling like a forecasting exercise and started feeling like something I would actually
+trust to watch a number that matters.
+
 ## what broke
 
 **simglucose vs Python 3.13.** First wall of the rebuild. simglucose depends on the

@@ -73,6 +73,10 @@ features is the most accurate in the race (it beats every model at 60 min), and 
 explanations are faithful by construction (0.977 on an ablation check), so each alert
 says why in plain terms instead of pointing at an attention map.
 
+Evaluated like a clinical tool, that same model puts ~97% of its predictions in the
+Clarke error grid's clinically-acceptable zones and catches 78% of hypo/hyper events at
+a 1% false-alarm rate.
+
 ## run it
 
 Coming together during phase 1. The pipeline is config-driven: everything in

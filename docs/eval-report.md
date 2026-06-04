@@ -101,6 +101,19 @@ different test patient; abstention falls as the cohort grows.)
 - event lead-time distribution:
 - false-alarm rate at the chosen operating point:
 
+## clinical view
+
+Evaluated on the glass-box model, test windows.
+
+- **Clarke error grid:** 84.5% zone A, 12.5% zone B, so **96.96% clinically acceptable
+  (A+B)** and 3.0% in the dangerous C/D/E zones. (Roughly 95%+ in A+B is the usual bar
+  for an acceptable glucose predictor.)
+- **Event detection** (hypo/hyper anywhere in the 60-minute horizon): sensitivity 0.78,
+  specificity 0.99, **false-alarm rate 0.01**. It catches about 78% of events while
+  almost never crying wolf, which is the number that decides whether an alarm stays on.
+- **Lead-time:** median 5 min across caught events. It reliably flags imminent events;
+  catching events earlier in the window is the harder problem and the next thing to push.
+
 ## drift watch
 
 - time-in-range trend detection:
