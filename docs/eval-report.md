@@ -15,9 +15,10 @@ Filled in as phase 1 produces results. Every number here is reproducible from
 |-------|---------:|---------:|-------|
 | naive_persistence | 23.66 | 36.14 | hold last value; the real baseline |
 | naive_trend | 31.67 | 61.04 | slope extrapolation; overshoots long-horizon |
-| ridge_lagged | **21.10** | 38.99 | ridge on flattened multivariate lags |
+| ridge_lagged | 21.10 | 38.99 | ridge on flattened multivariate lags |
 | gru | 30.09 | 44.34 | small + modestly trained here |
 | tcn | 28.69 | 47.78 | small + modestly trained here |
+| glassbox | **21.08** | **35.77** | interpretable-by-design; best overall |
 | nhits | pending | pending | |
 
 Clinical metrics (error grid, event lead-time, sensitivity) and calibrated
@@ -45,9 +46,30 @@ intervals are not in this table yet; RMSE only so far.
    they are data-hungry and this cohort is small. But on equal footing today, the
    simple models win and the deep ones have to justify themselves.
 
+6. **The interpretable model won.** A linear glass-box on 10 human-readable features
+   (21.08 @30min, 35.77 @60min) matches ridge at 30 min and beats every model,
+   including persistence, at 60 min. Interpretability cost nothing here; it was the
+   most accurate model in the race.
+
 Caveats: tiny cohort and a single seed, deep models trained modestly with no tuning,
 quantiles are residual-based not yet conformally calibrated. Treat as a baseline bar,
 not a verdict. The fair rematch is a much larger cohort with tuned deep models.
+
+## explanations
+
+The glass-box forecaster is interpretable by construction: each prediction decomposes
+exactly into signed per-feature contributions, so the "what drove this" is the model
+itself, not a post-hoc story. The ablation faithfulness check (claimed contributions
+vs the measured effect of removing each feature) scores **0.977**. Attention weights
+carry no such guarantee, which is why they are not used as the explanation.
+
+Example 30-minute calls (top drivers, signed, mg/dL):
+
+```text
+pred 100  <-  last_cgm -10.6, slope_short -7.2, std_cgm +6.2
+pred  99  <-  last_cgm -11.9, slope_short -6.1, carbs_recent -5.9
+pred 101  <-  last_cgm -12.0, carbs_recent -5.9, std_cgm +4.5
+```
 
 ## calibration and abstention
 

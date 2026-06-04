@@ -68,6 +68,11 @@ held-out third, textbook conformal silently drops to 63% coverage against a 90%
 promise, while Adaptive Conformal Inference recovers to 85%; under that shift the
 system abstains on the calls it can't make honestly rather than guessing.
 
+And interpretability turned out to be free: a glass-box model on 10 human-readable
+features is the most accurate in the race (it beats every model at 60 min), and its
+explanations are faithful by construction (0.977 on an ablation check), so each alert
+says why in plain terms instead of pointing at an attention map.
+
 ## run it
 
 Coming together during phase 1. The pipeline is config-driven: everything in

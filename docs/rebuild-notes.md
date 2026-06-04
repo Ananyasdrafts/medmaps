@@ -60,6 +60,18 @@ systematically wrong for a new population needs more representative data, not ju
 wider error bars. Saying that plainly is the difference between a system that knows its
 limits and one that hides them.
 
+**Interpretability turned out to be free.** I expected the glass-box model, a plain
+linear fit on ten hand-built features like recent slope and variability and time since
+the last bolus, to be the honest-but-slightly-worse option I could justify on
+transparency grounds. Instead it won. It matches ridge at 30 minutes and beats every
+model, persistence included, at 60. The most explainable model in the race was also the
+most accurate. That reframes the whole interpretability-versus-performance trade-off I
+thought I was making: here there was no trade. And because the model is linear in
+readable features, every forecast decomposes into exact contributions ("driven by last
+glucose down, short-term slope falling"), with a faithfulness check at 0.977 to prove
+the explanation matches what the model actually did. That number is the whole argument
+against attention heatmaps in one line: I can measure whether my explanation is true.
+
 ## what broke
 
 **simglucose vs Python 3.13.** First wall of the rebuild. simglucose depends on the
