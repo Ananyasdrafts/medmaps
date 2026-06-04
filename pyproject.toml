@@ -11,7 +11,7 @@ dependencies = [
     "pandas",
     "scipy",
     "scikit-learn",
-    "torch",
+    "torch",  # deep forecasters (GRU/TCN); CPU wheel is fine
     "pyyaml",
     "matplotlib",
     # data: simglucose is an FDA-simulator-based CGM generator. It pulls in the

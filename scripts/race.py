@@ -16,6 +16,7 @@ from medmaps.data.simulate import simulate_cohort
 from medmaps.data.windowing import windows_by_patient
 from medmaps.eval.metrics import rmse, rmse_per_horizon
 from medmaps.models.baselines import NaivePersistence, NaiveTrend, RidgeLagged
+from medmaps.models.deep import GRUForecaster, TCNForecaster
 
 COHORT = ["adolescent#001", "adult#001", "child#001"]
 DAYS = 4
@@ -50,6 +51,8 @@ def main() -> pd.DataFrame:
         NaivePersistence(target_index=cgm_idx),
         NaiveTrend(target_index=cgm_idx),
         RidgeLagged(alpha=1.0),
+        GRUForecaster(),
+        TCNForecaster(),
     ]
     rows = []
     for model in models:

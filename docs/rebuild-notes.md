@@ -72,3 +72,13 @@ That sets a clean, slightly humbling bar for everything that follows: a TCN, a G
 or N-HiTS now has to beat *persistence* at both horizons, especially 60 minutes, or
 it has not earned its parameters. This is exactly the "simple is hard to beat on
 time series" story (DLinear) showing up in my own numbers, on the first try.
+
+**The deep models lost.** I added a GRU and a TCN expecting at least the GRU to pull
+ahead. It didn't. Both land behind ridge and persistence at both horizons (GRU 30.1
+/ 44.3, TCN 28.7 / 47.8). The old me would have been tempted to quietly tune until
+the deep model "won," call it a success, and move on. The honest read is that on a
+small cohort with modest training, the extra capacity is a liability, not an asset,
+and writing that down is the point. It is not a claim that deep models are useless
+for glucose; they are data-hungry and I have barely fed them. The fair rematch is a
+much larger cohort with tuned models. But today, the boring model wins, and the repo
+says so out loud. That honesty is worth more than a cherry-picked deep-learning win.

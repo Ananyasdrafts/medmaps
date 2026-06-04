@@ -54,11 +54,13 @@ what changed, what broke along the way, and what it taught me is in
 
 ## results
 
-First finding, before any deep model: on a small simglucose cohort, the trivial
-**persistence** baseline (hold the last reading) is within ~2.5 mg/dL of ridge at 30
-minutes, and actually *beats* it at 60 minutes. Slope extrapolation is worst. So the
-bar any deep model must clear is persistence at both horizons. Full table and caveats
-in [docs/eval-report.md](docs/eval-report.md); the story is in
+First finding: on a small simglucose cohort, the simple models win. Ridge is best at
+30 min (~21 mg/dL); plain **persistence** (hold the last reading) is best at 60 min
+and beats ridge there. A GRU and a TCN, trained modestly, lose to both at both
+horizons. That's the "simple is hard to beat on time series" result in my own
+numbers, with the honest caveat that deep models are data-hungry and this cohort is
+small, so it's a baseline bar, not a verdict. Full table and caveats in
+[docs/eval-report.md](docs/eval-report.md); the story is in
 [docs/rebuild-notes.md](docs/rebuild-notes.md).
 
 ## run it

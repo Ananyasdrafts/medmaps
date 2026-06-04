@@ -16,8 +16,8 @@ Filled in as phase 1 produces results. Every number here is reproducible from
 | naive_persistence | 23.66 | 36.14 | hold last value; the real baseline |
 | naive_trend | 31.67 | 61.04 | slope extrapolation; overshoots long-horizon |
 | ridge_lagged | **21.10** | 38.99 | ridge on flattened multivariate lags |
-| tcn | pending | pending | |
-| gru | pending | pending | |
+| gru | 30.09 | 44.34 | small + modestly trained here |
+| tcn | 28.69 | 47.78 | small + modestly trained here |
 | nhits | pending | pending | |
 
 Clinical metrics (error grid, event lead-time, sensitivity) and calibrated
@@ -38,10 +38,16 @@ intervals are not in this table yet; RMSE only so far.
 4. **The pipeline looks sound.** Ridge at ~21 mg/dL @30min sits in the range of
    published CGM forecasters, a sign the data and windowing are not producing
    nonsense.
+5. **The deep models did not earn their complexity (here).** A GRU and a TCN,
+   trained modestly, land at 28-30 mg/dL @30min and 44-48 @60min, behind both ridge
+   and persistence at both horizons. This is the DLinear lesson in miniature: on
+   limited time-series data, simple wins. It is not proof deep models cannot help;
+   they are data-hungry and this cohort is small. But on equal footing today, the
+   simple models win and the deep ones have to justify themselves.
 
-Caveats: tiny cohort and a single seed, quantiles are residual-based not yet
-conformally calibrated, and no hyperparameters were tuned. Treat as a baseline bar,
-not a verdict.
+Caveats: tiny cohort and a single seed, deep models trained modestly with no tuning,
+quantiles are residual-based not yet conformally calibrated. Treat as a baseline bar,
+not a verdict. The fair rematch is a much larger cohort with tuned deep models.
 
 ## calibration and abstention
 
