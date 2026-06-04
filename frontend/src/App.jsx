@@ -18,11 +18,11 @@ export default function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const load = useCallback(async (event) => {
+  const load = useCallback(async (event = false, ood = false) => {
     setLoading(true);
     setError(null);
     try {
-      const s = await getSample(event);
+      const s = await getSample(event, ood);
       const r = await predict(s.window);
       setSample(s);
       setResult(r);
@@ -52,10 +52,16 @@ export default function App() {
           New reading
         </button>
         <button
-          onClick={() => load(true)}
+          onClick={() => load(true, false)}
           className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
         >
           Show an event
+        </button>
+        <button
+          onClick={() => load(false, true)}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        >
+          Unfamiliar reading
         </button>
         {loading && <span className="text-sm text-slate-400">loading...</span>}
       </div>

@@ -103,16 +103,22 @@ class MedMapsService:
             "thresholds": {"hypo": self.hypo, "hyper": self.hyper},
         }
 
-    def sample_window(self, index: int | None = None, event: bool = False) -> dict:
+    def sample_window(
+        self, index: int | None = None, event: bool = False, ood: bool = False
+    ) -> dict:
         x_te, y_te, e_te = self._test
         pool = np.where(e_te == 1)[0] if event and (e_te == 1).any() else np.arange(len(x_te))
         i = int(pool[index % len(pool)]) if index is not None else int(self._rng.choice(pool))
-        window = x_te[i]
+        window = x_te[i].copy()
         ci = FEATURES.index("cgm")
+        # an unfamiliar reading: shove glucose far outside the training range so the
+        # OOD check fires and the model abstains. The true future is meaningless here.
+        if ood:
+            window[:, ci] = window[:, ci] + 300.0
         return {
             "index": i,
             "window": window.tolist(),
             "history_minutes": [(-(self.input_steps - 1 - k)) * self.sm for k in range(self.input_steps)],
             "history_cgm": [round(float(v), 1) for v in window[:, ci]],
-            "true_future": [round(float(v), 1) for v in y_te[i]],
+            "true_future": None if ood else [round(float(v), 1) for v in y_te[i]],
         }

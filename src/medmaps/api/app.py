@@ -37,8 +37,10 @@ def health() -> dict:
 
 
 @app.get("/sample")
-def sample(event: bool = False, service: MedMapsService = Depends(get_service)) -> dict:
-    return service.sample_window(event=event)
+def sample(
+    event: bool = False, ood: bool = False, service: MedMapsService = Depends(get_service)
+) -> dict:
+    return service.sample_window(event=event, ood=ood)
 
 
 @app.post("/predict")

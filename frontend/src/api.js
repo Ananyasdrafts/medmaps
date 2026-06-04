@@ -1,7 +1,7 @@
 const BASE = import.meta.env.VITE_API ?? "http://localhost:8000";
 
-export async function getSample(event = false) {
-  const res = await fetch(`${BASE}/sample?event=${event}`);
+export async function getSample(event = false, ood = false) {
+  const res = await fetch(`${BASE}/sample?event=${event}&ood=${ood}`);
   if (!res.ok) throw new Error("sample request failed");
   return res.json();
 }
