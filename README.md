@@ -79,12 +79,34 @@ a 1% false-alarm rate.
 
 ## run it
 
-Coming together during phase 1. The pipeline is config-driven: everything in
-[configs/default.yaml](configs/default.yaml), nothing hard-coded in scripts.
+Everything is config-driven: the knobs live in
+[configs/default.yaml](configs/default.yaml), not hard-coded in scripts.
+
+Backend (the first start simulates a small cohort and fits the model, then caches it):
+
+```bash
+pip install -e .
+PYTHONPATH=src uvicorn medmaps.api.app:app --reload   # serves on :8000
+```
+
+Dashboard:
+
+```bash
+cd frontend && npm install && npm run dev             # opens on :5173
+```
+
+Reproduce the findings:
+
+```bash
+PYTHONPATH=src python scripts/race.py       # the model race
+PYTHONPATH=src python scripts/abstain.py    # conformal coverage and abstention
+PYTHONPATH=src python scripts/explain.py    # glass-box explanations
+PYTHONPATH=src python scripts/clinical.py   # error grid and event detection
+```
 
 ## roadmap
 
-- phase 1 `building` : glucose acute-warning core, end to end
+- phase 1 `done` : glucose acute-warning core, end to end (model + abstention + explanations + clinical eval + dashboard)
 - phase 2 `sketching` : second vital on the same spine
 - phase 3 `sketching` : medication adherence as a model feature
 - phase 4 `sketching` : drift-watch lens
