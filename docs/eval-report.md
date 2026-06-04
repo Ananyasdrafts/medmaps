@@ -51,9 +51,27 @@ not a verdict. The fair rematch is a much larger cohort with tuned deep models.
 
 ## calibration and abstention
 
-- target coverage vs empirical coverage (ACI):
-- abstention trade-off curve (accuracy gained per unit of "I don't know"):
-- vanilla split conformal vs ACI under shift (the failure demo):
+Setup: calibrate on two patients, test on a held-out third (a real cross-patient
+shift), 30-minute horizon, target coverage 90%.
+
+| method | empirical coverage | note |
+|--------|-------------------:|------|
+| split conformal (textbook) | 0.629 | collapses under shift |
+| adaptive conformal (ACI) | 0.853 | recovers toward target |
+
+- mean ACI interval width: 89 mg/dL, wide because the held-out patient is genuinely
+  hard to predict from a model that never saw them
+- with a 60 mg/dL actionability threshold the system abstains on 85% of calls; on the
+  kept set ACI coverage is 0.836
+
+This is the failure the project exists to avoid, shown on purpose. Textbook conformal
+quietly drops to 63% coverage on a new patient while still claiming 90%; ACI adapts
+its level online and climbs back toward target. The high abstention rate is the system
+correctly refusing to make confident calls for someone unlike anyone it trained on.
+Subtle but important: width-based abstention handles variance, not systematic bias, so
+a model that is consistently off for a new population needs a broader cohort, not just
+wider error bars. (Stress test: only two training patients and a deliberately
+different test patient; abstention falls as the cohort grows.)
 
 ## clinical view
 

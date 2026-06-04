@@ -46,6 +46,20 @@ method with a faithfulness check. An explanation I can't trust is worse than non
 Error-grid analysis, event lead-time and sensitivity, interval calibration, and
 false-alarm rate, instead of a lonely RMSE number.
 
+**The abstention layer, doing its job.** This is the part I most wanted to get right,
+and the demo did exactly what I hoped and feared. Calibrated on two patients, textbook
+split conformal covers only 63% of a held-out third while still promising 90%. The
+exchangeability assumption breaks the instant the test patient differs, and the
+guarantee evaporates silently, which is the whole danger. Adaptive Conformal Inference,
+nudging its level as it sees misses, climbs back to 85%. Under that shift the honest
+intervals widen to about 89 mg/dL, so with an actionability threshold the system
+abstains on most predictions for that patient. That is not a bug, it is the system
+refusing to pretend it understands someone it never saw. The lesson I did not expect to
+write down: abstaining on interval width handles variance, not bias. A model that is
+systematically wrong for a new population needs more representative data, not just
+wider error bars. Saying that plainly is the difference between a system that knows its
+limits and one that hides them.
+
 ## what broke
 
 **simglucose vs Python 3.13.** First wall of the rebuild. simglucose depends on the

@@ -63,6 +63,11 @@ small, so it's a baseline bar, not a verdict. Full table and caveats in
 [docs/eval-report.md](docs/eval-report.md); the story is in
 [docs/rebuild-notes.md](docs/rebuild-notes.md).
 
+The abstention layer earns its name. Calibrated on two patients and tested on a
+held-out third, textbook conformal silently drops to 63% coverage against a 90%
+promise, while Adaptive Conformal Inference recovers to 85%; under that shift the
+system abstains on the calls it can't make honestly rather than guessing.
+
 ## run it
 
 Coming together during phase 1. The pipeline is config-driven: everything in
