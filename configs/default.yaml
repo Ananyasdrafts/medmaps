@@ -1,0 +1,66 @@
+# MedMaps phase-1 config. Experiments change here, not in code.
+
+seed: 7
+
+data:
+  source: simglucose          # FDA-simulator-based CGM generator
+  patients: 10                # simulated cohort
+  days_per_patient: 90
+  sample_minutes: 5           # CGM cadence
+  # medication adherence is injected via the insulin control channel.
+  adherence:
+    missed_bolus_prob: 0.10   # fraction of meal boluses skipped
+    mistimed_bolus_minutes: 30
+
+task:
+  input_window_minutes: 60    # history fed to the model
+  horizons_minutes: [30, 60]  # acute-warning prediction horizons
+  thresholds:
+    hypo: 70
+    hyper: 180
+
+# the model race. each is trained and evaluated on the same split; the report
+# names the actual winner rather than assuming the deep model wins.
+models:
+  - name: naive_trend
+  - name: ridge_lagged
+  - name: tcn
+  - name: gru
+  - name: nhits
+
+# distributional forecast -> event risk = predicted mass past threshold.
+forecast:
+  type: quantile              # quantile | conformalized
+  quantiles: [0.05, 0.25, 0.5, 0.75, 0.95]
+
+# time-series-aware calibration. NOT vanilla split conformal.
+uncertainty:
+  method: aci                 # aci (Gibbs & Candes 2021) | enbpi
+  target_coverage: 0.90
+  aci_step_size: 0.01
+
+abstention:
+  max_interval_width: 60      # mg/dL; wider than this -> abstain
+  ood_detection: true         # flag inputs unlike training distribution
+
+# slow-timescale "drift watch" lens.
+drift_watch:
+  window_hours: 24
+  time_in_range: [70, 180]
+  cv_threshold: 0.36          # coefficient of variation; >0.36 is unstable control
+  changepoint: true
+
+explain:
+  method: integrated_gradients  # with faithfulness check; never raw attention as truth
+  interpretable_baseline: true  # also fit a glass-box model on engineered features
+
+eval:
+  metrics:
+    - rmse
+    - mae
+    - error_grid               # Clarke / Parkes clinical zones
+    - event_sensitivity
+    - event_lead_time
+    - interval_coverage
+    - false_alarm_rate
+  abstention_tradeoff_curve: true

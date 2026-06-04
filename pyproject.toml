@@ -1,0 +1,39 @@
+[project]
+name = "medmaps"
+version = "0.1.0"
+description = "A glucose early-warning model that forecasts risk, explains it, and abstains when unsure."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Ananya Gupta" }]
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "scikit-learn",
+    "torch",
+    "pyyaml",
+    "matplotlib",
+    # data: simglucose is an FDA-simulator-based CGM generator. It pulls in the
+    # old gym, which needs distutils (removed in py3.12+); setuptools<81 restores
+    # the distutils shim so it runs on 3.13. See docs/rebuild-notes.md.
+    "simglucose",
+    "setuptools<81",
+    # serving
+    "fastapi",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
