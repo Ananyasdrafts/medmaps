@@ -59,4 +59,16 @@ dependency archaeology, and that the newest Python is not always the friendliest
 
 ## findings
 
-(notable results land here and get surfaced in the README)
+**The baseline bites back (first race).** Before any deep model, I raced two naive
+baselines and a ridge regression. The result is a good lesson in not trusting your
+own framing. I'd assumed a naive baseline would be hard to beat at 30 minutes, and
+it is, but only once you pick the *right* naive. My first one extrapolated the
+recent slope, which overshoots and lands worst of the three (RMSE 61 at 60 min). The
+honest baseline is persistence, just holding the last reading: it scores 23.7 at 30
+min, within 2.5 mg/dL of ridge, and actually beats ridge at 60 min (36.1 vs 39.0).
+
+So the ranking flips with horizon, and the trivial model wins at the longer one.
+That sets a clean, slightly humbling bar for everything that follows: a TCN, a GRU,
+or N-HiTS now has to beat *persistence* at both horizons, especially 60 minutes, or
+it has not earned its parameters. This is exactly the "simple is hard to beat on
+time series" story (DLinear) showing up in my own numbers, on the first try.

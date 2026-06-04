@@ -29,6 +29,16 @@ def test_naive_trend_nails_a_straight_line():
     assert rmse(y, model.predict(x)) < 1e-6
 
 
+def test_persistence_holds_last_value():
+    from medmaps.models.baselines import NaivePersistence
+
+    x, y, _ = _windows_from_series(np.full(60, 100.0))  # flat series -> exact
+    model = NaivePersistence(target_index=0).fit(x, y)
+    preds = model.predict(x)
+    assert preds.shape == y.shape
+    assert rmse(y, preds) == 0.0
+
+
 def test_quantiles_are_shaped_and_monotone():
     rng = np.random.default_rng(0)
     cgm = 2.0 * np.arange(60) + rng.normal(0, 3, 60)  # noisy -> nonzero residuals

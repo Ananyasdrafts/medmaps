@@ -54,8 +54,12 @@ what changed, what broke along the way, and what it taught me is in
 
 ## results
 
-Findings and the full evaluation go in [docs/eval-report.md](docs/eval-report.md)
-as they land. Headline observations will be surfaced here.
+First finding, before any deep model: on a small simglucose cohort, the trivial
+**persistence** baseline (hold the last reading) is within ~2.5 mg/dL of ridge at 30
+minutes, and actually *beats* it at 60 minutes. Slope extrapolation is worst. So the
+bar any deep model must clear is persistence at both horizons. Full table and caveats
+in [docs/eval-report.md](docs/eval-report.md); the story is in
+[docs/rebuild-notes.md](docs/rebuild-notes.md).
 
 ## run it
 

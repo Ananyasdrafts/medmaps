@@ -12,6 +12,25 @@ import numpy as np
 from .base import Forecaster
 
 
+class NaivePersistence(Forecaster):
+    """Hold the last reading flat across the horizon. The standard CGM baseline,
+    and usually the genuinely hard one to beat at short horizons."""
+
+    name = "naive_persistence"
+
+    def __init__(self, target_index: int = 0) -> None:
+        super().__init__()
+        self.target_index = target_index
+        self.horizon: int | None = None
+
+    def _fit(self, X: np.ndarray, y: np.ndarray) -> None:
+        self.horizon = int(y.shape[1])
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        last = X[:, -1, self.target_index]
+        return np.repeat(last[:, None], self.horizon, axis=1)
+
+
 class NaiveTrend(Forecaster):
     name = "naive_trend"
 
