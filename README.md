@@ -9,8 +9,8 @@ it happens, tells you why, and would rather warn you early than miss a real low.
 
 ## demo
 
-**[Try it live](https://ananyasdrafts.github.io/medmaps/)** — runs in your browser,
-nothing to install.
+**[Try it live](https://ananyasdrafts.github.io/medmaps/)** (runs in your browser,
+nothing to install).
 
 ![MedMaps live monitor](docs/images/demo.gif)
 
@@ -42,16 +42,25 @@ If you have diabetes, your CGM hands you a number every few minutes and almost n
 reading it. The moments that matter, a low overnight or your control slipping over a
 few weeks, are the ones you catch too late.
 
-The market already does basic threshold alerts. Here's what I wanted MedMaps to do that
-they don't:
+The market already does basic threshold alerts. A couple of things I wanted MedMaps to
+do in the moment that they don't:
 
-- explain the alert (you're dropping fast, you've still got insulin on board, you're
-  light on carbs)
-- nag less: if you already ate carbs that cover the low it backs off, and if a reading
-  looks like sensor junk it says "check manually" instead of guessing
-- watch the slow stuff no CGM app bothers to show you
+- **explain the alert.** Not just "low soon" but why: you're dropping fast, you've still
+  got insulin on board, you're light on carbs. The reason changes what you actually do
+  about it.
+- **nag less.** If you already ate carbs that cover the low, it backs off. If a reading
+  looks like sensor junk (a compression low, say), it says "check manually" instead of
+  firing a confident wrong alarm. Fewer false alarms, same sensitivity.
 
-And it leans toward warning on purpose. A missed low is way worse than a false alarm.
+And it leans toward warning on purpose. In glucose care a missed low is far worse than a
+false alarm, so when it's unsure it warns instead of going quiet.
+
+But the part I care about most is the slow one. Every CGM app shouts about the next 30
+minutes. Almost none tell you that your time-in-range has been sliding for two weeks,
+that your swings are getting wider, or that you're drifting out of control in a way no
+single reading makes obvious. That slow decline is the thing nobody is measuring for
+you, and over time it is usually what actually matters. MedMaps watches it and flags it
+early, and it tunes to you instead of leaning on one-size-fits-all thresholds.
 
 ## how it works
 
@@ -62,7 +71,8 @@ Five rules, each one there because it's a way these systems usually break:
 2. **predict a range, not a single number.** Event risk is just how much of that range
    crosses the danger line, so the uncertainty isn't bolted on after.
 3. **use the right kind of conformal.** Plain split conformal quietly breaks on time
-   series, so I used adaptive conformal, which holds its coverage as things shift.
+   series, so I used adaptive conformal prediction (ACI), which holds its coverage as
+   things shift.
 4. **explanations you can actually trust.** No hand-waving at attention weights. A
    glass-box model on readable features, plus a check that the explanation is faithful.
 5. **score it like a clinical tool.** Error grid, how early it catches events,
@@ -88,6 +98,9 @@ cd frontend && npm install && npm run dev            # opens on :5173
 
 To reproduce the findings: `scripts/race.py`, `scripts/abstain.py`, `scripts/explain.py`,
 `scripts/clinical.py` (each with `PYTHONPATH=src python ...`).
+
+It's all tested and runs in CI on every push, so the numbers above aren't a one-time
+thing I got lucky with.
 
 ## limitations
 
