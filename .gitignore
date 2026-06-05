@@ -8,8 +8,9 @@ venv/
 .ruff_cache/
 
 # data and model artifacts (kept out of git; regenerated from config)
-data/
-artifacts/
+# anchored to repo root so they don't match src/medmaps/data/
+/data/
+/artifacts/
 *.pt
 *.ckpt
 *.parquet
