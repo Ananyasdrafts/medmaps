@@ -112,9 +112,7 @@ of what's next.
 - **phase 1 (done):** the whole glucose pipeline, model race, conformal abstention,
   glass-box explanations, clinical eval, the safety-first alerts, drift watch, light
   personalization, and the live dashboard.
-- **phase 2 (next):** a second vital on the same spine, and better personalization.
-
-The bigger milestone, and the honest gap from the limitations above, is validating on
-real CGM data: [OhioT1DM](http://smarthealth.cs.ohio.edu/OhioT1DM-dataset.html) first
-(the standard benchmark), then real-world records like OpenAPS and Tidepool. That's what
-turns this from "promising on a simulator" into "works on people."
+- **phase 2 (next):** validate on real CGM data
+  ([OhioT1DM](http://smarthealth.cs.ohio.edu/OhioT1DM-dataset.html) first, then OpenAPS
+  and Tidepool). That's what takes it from "works on a simulator" to "works on people."
+- **phase 3:** a second vital on the same spine, and better personalization.
