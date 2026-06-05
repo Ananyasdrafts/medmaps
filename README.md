@@ -42,8 +42,8 @@ If you have diabetes, your CGM hands you a number every few minutes and almost n
 reading it. The moments that matter, a low overnight or your control slipping over a
 few weeks, are the ones you catch too late.
 
-The market already does basic threshold alerts. A couple of things I wanted MedMaps to
-do in the moment that they don't:
+The market already does basic threshold alerts. Here's what I wanted MedMaps to do that
+they don't:
 
 - **explain the alert.** Not just "low soon" but why: you're dropping fast, you've still
   got insulin on board, you're light on carbs. The reason changes what you actually do
@@ -51,16 +51,17 @@ do in the moment that they don't:
 - **nag less.** If you already ate carbs that cover the low, it backs off. If a reading
   looks like sensor junk (a compression low, say), it says "check manually" instead of
   firing a confident wrong alarm. Fewer false alarms, same sensitivity.
+- **watch the slow drift, not just the next 30 minutes.** This is the part I care about
+  most. Every CGM app shouts about the immediate stuff. Almost none tell you your
+  time-in-range has been sliding for two weeks, that your swings are getting wider, or
+  that you're drifting out of control in a way no single reading makes obvious. That slow
+  decline is the thing nobody is measuring for you, and over time it is usually what
+  matters most.
+- **tune to the person.** It learns your own patterns instead of leaning on
+  one-size-fits-all thresholds.
 
 And it leans toward warning on purpose. In glucose care a missed low is far worse than a
 false alarm, so when it's unsure it warns instead of going quiet.
-
-But the part I care about most is the slow one. Every CGM app shouts about the next 30
-minutes. Almost none tell you that your time-in-range has been sliding for two weeks,
-that your swings are getting wider, or that you're drifting out of control in a way no
-single reading makes obvious. That slow decline is the thing nobody is measuring for
-you, and over time it is usually what actually matters. MedMaps watches it and flags it
-early, and it tunes to you instead of leaning on one-size-fits-all thresholds.
 
 ## how it works
 
