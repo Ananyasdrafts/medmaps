@@ -9,98 +9,71 @@ before it happens, explains the call, and would rather warn you early than miss 
 
 ## demo
 
-**[Try it live](https://ananyasdrafts.github.io/medmaps/)**
+**[Try it live](https://ananyasdrafts.github.io/medmaps/)** (runs in the browser, no setup)
 
 ![MedMaps live monitor](docs/images/demo.gif)
 
-The dashboard plays a real CGM stream forward in time: the forecast and its
-uncertainty band project ahead of "now," the alert fires *before* the event with its
-reason and a phone-style notification, and a panel underneath tracks the slower "is
-control slipping" picture. It is the engine's explainer view; the actual product is a
-push notification on a phone.
-
-## the sketch
-
-People managing diabetes get a stream of glucose readings and almost no help
-reading them. The dangerous moments, a low overnight, a slow loss of control over
-weeks, are exactly the ones that go unnoticed until they are urgent.
-
-MedMaps watches the stream on two timescales:
-
-- **acute warning**: predicts an oncoming hypo (<70 mg/dL) or hyper (>180 mg/dL)
-  event 30 to 60 minutes out, the window where you can still act.
-- **drift watch**: a slower signal over hours and days that flags when control is
-  quietly slipping, before any single reading looks alarming.
-
-What sets it apart from the threshold alerts already on the market:
-
-- it **explains** every alert (falling fast, insulin still active, light on carbs),
-- it **cuts false alarms with context** instead of nagging (recent carbs can cover a
-  coming low, recent insulin can bring down a coming high), and it flags an unreliable
-  reading **out loud** ("check manually") rather than guessing or going silent,
-- and it watches the **slow drift** no consumer CGM surfaces.
-
-It is deliberately not balanced. In glucose care a missed low is far worse than a
-false alarm, so the alert errs toward warning.
-
-## how it works
-
-The design follows five rules, each there to avoid a way these systems usually
-fail. The reasoning behind each one lives in [docs/rebuild-notes.md](docs/rebuild-notes.md).
-
-1. **No assumed winner.** Naive trend, ridge on lagged features, a TCN, a GRU, and
-   N-HiTS all race on the same split. The repo reports who actually wins, even if
-   it is the boring model.
-2. **Predict a distribution, not a point.** The model outputs a predictive
-   distribution over future glucose. Event risk is the mass past the threshold, so
-   uncertainty flows into the risk number instead of being bolted on.
-3. **Time-series-aware uncertainty.** Calibration uses Adaptive Conformal Inference
-   (ACI) / EnbPI, not textbook split conformal, which silently loses its coverage
-   guarantee on dependent, shifting data.
-4. **Honest explanations.** No pretending attention weights are reasons. Either an
-   interpretable-by-design model on human-readable features, or post-hoc
-   attribution with a faithfulness check.
-5. **Clinical evaluation.** Clarke/Parkes error grid, event lead-time and
-   sensitivity, interval calibration, false-alarm rate, and an abstention
-   trade-off curve. Not just RMSE.
-
-## what's different this time
-
-This is a rebuild of an old project. The running log of what the first version did,
-what changed, what broke along the way, and what it taught me is in
-[docs/rebuild-notes.md](docs/rebuild-notes.md).
+The dashboard plays a glucose stream forward in time: the forecast and its uncertainty
+band project ahead of "now," the alert fires *before* the event with its reason and a
+phone-style notification, and a panel underneath tracks the slower "is control
+slipping" picture. It is the engine's explainer view; the real product is a push
+notification on a phone.
 
 ## results
 
-First finding: on a small simglucose cohort, the simple models win. Ridge is best at
-30 min (~21 mg/dL); plain **persistence** (hold the last reading) is best at 60 min
-and beats ridge there. A GRU and a TCN, trained modestly, lose to both at both
-horizons. That's the "simple is hard to beat on time series" result in my own
-numbers, with the honest caveat that deep models are data-hungry and this cohort is
-small, so it's a baseline bar, not a verdict. Full table and caveats in
-[docs/eval-report.md](docs/eval-report.md); the story is in
+A few findings worth the scroll. Full tables are in
+[docs/eval-report.md](docs/eval-report.md); the story behind them is in
 [docs/rebuild-notes.md](docs/rebuild-notes.md).
 
-The abstention layer earns its name. Calibrated on two patients and tested on a
-held-out third, textbook conformal silently drops to 63% coverage against a 90%
-promise, while Adaptive Conformal Inference recovers to 85%; under that shift the
-system abstains on the calls it can't make honestly rather than guessing.
+- **Simple beats deep.** In a head-to-head race, a glass-box linear model and plain
+  persistence beat a GRU and a TCN at both the 30 and 60-minute horizons. The "simple
+  is hard to beat on time series" result, in my own numbers.
+- **The uncertainty is honest.** Calibrated on two patients and tested on a held-out
+  third, textbook conformal silently drops to **63% coverage** against a 90% promise;
+  Adaptive Conformal Inference recovers it to **85%**.
+- **Interpretability was free.** The most accurate model is the glass-box one on 10
+  human-readable features, and its explanations are faithful by construction (**0.977**
+  on an ablation check), so every alert says why in plain terms, not an attention map.
+- **It holds up clinically.** **~97%** of predictions land in the Clarke error grid's
+  clinically-acceptable zones, and it catches **78%** of hypo/hyper events at a **1%**
+  false-alarm rate.
 
-And interpretability turned out to be free: a glass-box model on 10 human-readable
-features is the most accurate in the race (it beats every model at 60 min), and its
-explanations are faithful by construction (0.977 on an ablation check), so each alert
-says why in plain terms instead of pointing at an attention map.
+## the sketch
 
-Evaluated like a clinical tool, that same model puts ~97% of its predictions in the
-Clarke error grid's clinically-acceptable zones and catches 78% of hypo/hyper events at
-a 1% false-alarm rate.
+People managing diabetes get a stream of glucose readings and almost no help reading
+them. The dangerous moments, a low overnight or a slow loss of control over weeks, are
+exactly the ones that go unnoticed until they are urgent. What sets MedMaps apart from
+the threshold alerts already on the market:
+
+- it **explains** every alert (falling fast, insulin still active, light on carbs),
+- it **cuts false alarms with context** (recent carbs can cover a coming low, recent
+  insulin can bring down a coming high) and flags an unreliable reading **out loud**
+  ("check manually") rather than guessing or going silent,
+- and it watches the **slow drift** no consumer CGM surfaces.
+
+It is deliberately not balanced. In glucose care a missed low is far worse than a false
+alarm, so the alert errs toward warning.
+
+## how it works
+
+Five rules, each there to avoid a way these systems usually fail:
+
+1. **No assumed winner.** Naive trend, ridge on lagged features, a TCN, a GRU, and
+   N-HiTS race on the same split. The repo reports who actually wins, even if it is the
+   boring model.
+2. **Predict a distribution, not a point.** Event risk is the predicted mass past the
+   threshold, so uncertainty flows into the risk number instead of being bolted on.
+3. **Time-series-aware uncertainty.** Calibration uses Adaptive Conformal Inference,
+   not textbook split conformal, which silently loses its coverage guarantee on
+   dependent, shifting data.
+4. **Honest explanations.** No pretending attention weights are reasons. An
+   interpretable-by-design model on human-readable features, with a faithfulness check.
+5. **Clinical evaluation.** Clarke error grid, event lead-time and sensitivity, interval
+   calibration, false-alarm rate. Not just RMSE.
 
 ## run it
 
-Everything is config-driven: the knobs live in
-[configs/default.yaml](configs/default.yaml), not hard-coded in scripts.
-
-Backend:
+Config-driven: the knobs live in [configs/default.yaml](configs/default.yaml).
 
 ```bash
 python -m venv .venv
@@ -110,22 +83,30 @@ PYTHONPATH=src python scripts/generate_cohort.py     # pre-build the demo cohort
 PYTHONPATH=src uvicorn medmaps.api.app:app --port 8000
 ```
 
-Dashboard (second terminal):
+Dashboard, second terminal:
 
 ```bash
 cd frontend && npm install && npm run dev            # opens on :5173
 ```
 
-Reproduce the findings:
+Reproduce the findings: `scripts/race.py`, `scripts/abstain.py`, `scripts/explain.py`,
+`scripts/clinical.py` (each with `PYTHONPATH=src python ...`).
 
-```bash
-PYTHONPATH=src python scripts/race.py       # the model race
-PYTHONPATH=src python scripts/abstain.py    # conformal coverage and abstention
-PYTHONPATH=src python scripts/explain.py    # glass-box explanations
-PYTHONPATH=src python scripts/clinical.py   # error grid and event detection
-```
+## limitations
+
+The honest one, and the next milestone: **MedMaps is validated on simulated CGM, not
+real patients yet.** v1 runs on [simglucose](https://github.com/jxx123/simglucose), the
+FDA-accepted UVA/Padova simulator. That is a deliberate choice, it makes the whole repo
+reproducible with no PHI and no data-access gatekeeping, so anyone can clone and run it.
+But a simulator is smooth in ways real CGM is not (sensor noise, compression lows, human
+messiness), and the cohort here is small and single-seed, so the numbers are a baseline
+bar, not a verdict.
 
 ## roadmap
 
-- phase 1 `done` : glucose early-warning, end to end — model race, conformal abstention, glass-box explanations, clinical eval, safety-asymmetric alerts, drift watch, light personalization, and the live-monitor dashboard
-- next `sketching` : a second vital on the same spine, deeper personalization, a hosted demo
+- phase 1 `done` : glucose early-warning end to end — model race, conformal abstention,
+  glass-box explanations, clinical eval, safety-asymmetric alerts, drift watch, light
+  personalization, live-monitor dashboard
+- phase 2 `next` : **validate on real CGM data** ([OhioT1DM](http://smarthealth.cs.ohio.edu/OhioT1DM-dataset.html),
+  the standard forecasting benchmark, then broader real-world data like OpenAPS and
+  Tidepool/Open Humans), then a second vital and deeper personalization
