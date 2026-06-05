@@ -102,10 +102,23 @@ export default function App() {
     <Shell>
       <div className="mb-4 flex items-center gap-3">
         <button
-          onClick={() => (atEnd ? load() : setPlaying((p) => !p))}
+          onClick={() => {
+            if (atEnd) {
+              setIdx(0);
+              setPlaying(true);
+            } else {
+              setPlaying((p) => !p);
+            }
+          }}
           className="w-20 rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
         >
           {atEnd ? "Replay" : playing ? "Pause" : "Play"}
+        </button>
+        <button
+          onClick={load}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        >
+          New scenario
         </button>
         <input
           type="range"

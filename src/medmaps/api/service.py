@@ -134,19 +134,11 @@ class MedMapsService:
         scores = conformity_scores(yc[:, self.idx30], self.model.predict(xc)[:, self.idx30])
         return split_conformal_width(scores, self.alpha)
 
-    def build_scenario(self, kind: str = "event") -> dict:
-        """A playable scenario: one patient's stream advancing step by step, with the
-        forecast, the alert, the why, and a running drift status at each step.
-
-        Personalized per patient: the interval is calibrated on that patient's own
-        earlier data, and drift compares their recent window to their own baseline.
-        """
+    def _eligible_scenarios(self) -> list[dict]:
+        """Every (patient, segment) candidate that contains a playable event."""
         ci = FEATURES.index("cgm")
-        choi = FEATURES.index("cho")
-        boli = FEATURES.index("bolus")
-        isteps, hsteps, sm = self.input_steps, self.horizon_steps, self.sm
-
-        chosen = None
+        isteps, hsteps = self.input_steps, self.horizon_steps
+        cands = []
         for name, g in self._cohort.groupby("patient", sort=False):
             g = g.sort_values("time").reset_index(drop=True)
             cut = int(len(g) * 0.6)
@@ -161,25 +153,23 @@ class MedMapsService:
                  if cgm[t:t + hsteps].min() < self.hypo or cgm[t:t + hsteps].max() > self.hyper),
                 None,
             )
-            if kind == "event" and event_at is None:
+            if event_at is None:
                 continue
-            start = max(isteps, (event_at - 18) if event_at is not None else isteps)
-            end = min(len(live) - hsteps, (event_at + 12) if event_at is not None else len(live) - hsteps)
-            chosen = (name, feats, cgm, width, start, end)
-            break
+            cands.append({
+                "name": name, "feats": feats, "cgm": cgm, "width": width,
+                "start": max(isteps, event_at - 18),
+                "end": min(len(live) - hsteps, event_at + 12),
+            })
+        return cands
 
-        if chosen is None:  # fallback: first usable patient, whole live segment
-            name, g = next(iter(self._cohort.groupby("patient", sort=False)))
-            g = g.sort_values("time").reset_index(drop=True)
-            cut = int(len(g) * 0.6)
-            width = self._personal_width(g.iloc[:cut]) or self._width
-            live = g.iloc[cut:].reset_index(drop=True)
-            feats = live[FEATURES].to_numpy(dtype=float)
-            cgm = feats[:, ci]
-            start, end = isteps, len(live) - hsteps
-
+    def _frames_for(self, c: dict) -> dict:
+        """Build the playable frames for one candidate scenario."""
+        choi = FEATURES.index("cho")
+        boli = FEATURES.index("bolus")
+        sm, isteps = self.sm, self.input_steps
+        feats, cgm, width = c["feats"], c["cgm"], c["width"]
         frames = []
-        for t in range(start, end):
+        for t in range(c["start"], c["end"]):
             window = feats[t - isteps:t]
             x = window[None, ...]
             traj = self.model.predict(x)[0]
@@ -209,13 +199,25 @@ class MedMapsService:
                     "time_in_range": d["recent"]["time_in_range"], "cv": d["recent"]["cv"],
                 },
             })
-
         return {
-            "patient": name,
+            "patient": c["name"],
             "sample_minutes": sm,
-            "horizon_minutes": [(i + 1) * sm for i in range(hsteps)],
+            "horizon_minutes": [(i + 1) * sm for i in range(self.horizon_steps)],
             "thresholds": {"hypo": self.hypo, "hyper": self.hyper},
             "actual": [{"min": int(k * sm), "cgm": round(float(cgm[k]), 1)}
-                       for k in range(min(end + hsteps, len(cgm)))],
+                       for k in range(min(c["end"] + self.horizon_steps, len(cgm)))],
             "frames": frames,
         }
+
+    def build_scenario(self, kind: str = "event", pick: int | None = None) -> dict:
+        """One playable scenario. Picks a random eligible patient each call so the
+        demo varies, or a specific one via `pick`."""
+        cands = self._eligible_scenarios()
+        if not cands:
+            raise RuntimeError("no eligible scenario found in the cohort")
+        i = pick if pick is not None else int(self._rng.integers(len(cands)))
+        return self._frames_for(cands[i % len(cands)])
+
+    def all_scenarios(self, kind: str = "event") -> list[dict]:
+        """Every eligible scenario, used for the static export."""
+        return [self._frames_for(c) for c in self._eligible_scenarios()]

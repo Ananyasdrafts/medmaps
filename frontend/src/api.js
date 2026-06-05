@@ -7,17 +7,18 @@ export async function getSample(event = false, ood = false) {
 }
 
 export async function getScenario(kind = "event") {
-  // try the live backend; fall back to the bundled scenario so the hosted static
-  // site works with no server running.
+  // try the live backend (returns a random scenario each call); fall back to the
+  // bundled scenarios so the hosted static site works with no server running.
   try {
     const res = await fetch(`${BASE}/scenario?kind=${kind}`);
     if (res.ok) return res.json();
   } catch {
     // backend not reachable; use the static export below
   }
-  const res = await fetch(`${import.meta.env.BASE_URL}scenario.json`);
+  const res = await fetch(`${import.meta.env.BASE_URL}scenarios.json`);
   if (!res.ok) throw new Error("no scenario available");
-  return res.json();
+  const list = await res.json();
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 export async function predict(window) {
