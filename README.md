@@ -16,7 +16,7 @@ nothing to install).
 
 Press play and watch a glucose stream move forward in time. The model forecasts ahead,
 and the alert goes off before the low actually hits, with a reason and a phone
-notification. This is the explainer view I built to show what's going on. In real life
+notification. This is the explainer view to show what's going on. In real life
 it would just be a notification on your phone.
 
 ## what I found
@@ -105,7 +105,7 @@ thing I got lucky with.
 
 ## limitations
 
-The honest one: this runs on simulated glucose, not real patients yet. I used
+This runs on simulated glucose, not real patients yet. I used
 [simglucose](https://github.com/jxx123/simglucose), an FDA-accepted simulator, on
 purpose, so the whole repo is reproducible with no private health data and anyone can
 just clone and run it. But a simulator is cleaner than real CGM (no sensor noise, no
