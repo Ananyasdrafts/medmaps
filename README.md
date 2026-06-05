@@ -20,13 +20,6 @@ notification. The "this stretch" panel underneath is the drift watch, tracking
 time-in-range and variability as they move. This is the explainer view to show what's
 going on. In real life it would just be a notification on your phone.
 
-## highlights
-
-- a plain linear model beat a GRU and a TCN
-- adaptive conformal held 85% coverage where textbook conformal broke (63%)
-- 97% of predictions in the Clarke error grid's safe zones
-- 78% of highs and lows caught at a 1% false-alarm rate
-
 ## what I found
 
 Full tables are in [docs/eval-report.md](docs/eval-report.md), and the messier build
