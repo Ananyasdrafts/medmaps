@@ -6,6 +6,12 @@ export async function getSample(event = false, ood = false) {
   return res.json();
 }
 
+export async function getScenario(kind = "event") {
+  const res = await fetch(`${BASE}/scenario?kind=${kind}`);
+  if (!res.ok) throw new Error("scenario request failed");
+  return res.json();
+}
+
 export async function predict(window) {
   const res = await fetch(`${BASE}/predict`, {
     method: "POST",
