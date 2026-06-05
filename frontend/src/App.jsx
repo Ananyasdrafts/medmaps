@@ -3,6 +3,7 @@ import { getScenario } from "./api";
 import AlertBanner from "./components/AlertBanner";
 import DriftPanel from "./components/DriftPanel";
 import LiveChart from "./components/LiveChart";
+import NotificationMock from "./components/NotificationMock";
 import WhyPanel from "./components/WhyPanel";
 
 function Shell({ children }) {
@@ -10,10 +11,7 @@ function Shell({ children }) {
     <div className="mx-auto max-w-4xl px-4 py-10">
       <header className="mb-6">
         <h1 className="text-2xl font-semibold text-slate-800">MedMaps</h1>
-        <p className="text-slate-500">
-          A continuous glucose monitor that warns before trouble, says why, and stays calm
-          otherwise.
-        </p>
+        <p className="text-slate-500">An early-warning layer for continuous glucose monitors.</p>
       </header>
       {children}
     </div>
@@ -140,6 +138,7 @@ export default function App() {
 
       <div className="mt-5 grid gap-5 md:grid-cols-2">
         <div className="space-y-5">
+          <NotificationMock alert={frame.alert} />
           <AlertBanner alert={frame.alert} />
           <DriftPanel drift={frame.drift} />
         </div>

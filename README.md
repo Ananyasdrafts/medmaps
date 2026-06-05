@@ -2,10 +2,21 @@
 
 # MedMaps
 
-A glucose early-warning model that forecasts risk before an event, explains what
-drove the call, and stays quiet when it isn't sure.
+An early-warning layer for continuous glucose monitors. It predicts a high or low
+before it happens, explains the call, and is tuned so a missed low never costs less
+than a false alarm.
 
-`status: building` · phase 1 of 4
+`status: phase 1 complete`
+
+## demo
+
+![MedMaps live monitor](docs/images/demo.gif)
+
+The dashboard plays a real CGM stream forward in time: the forecast and its
+uncertainty band project ahead of "now," the alert fires *before* the event with its
+reason and a phone-style notification, and a panel underneath tracks the slower "is
+control slipping" picture. It is the engine's explainer view; the actual product is a
+push notification on a phone.
 
 ## the sketch
 
@@ -20,10 +31,16 @@ MedMaps watches the stream on two timescales:
 - **drift watch**: a slower signal over hours and days that flags when control is
   quietly slipping, before any single reading looks alarming.
 
-The point that matters most: when the signal is thin or unfamiliar, MedMaps says
-"not enough to call this" instead of firing a confident wrong alert. A false alarm
-costs trust, and a missed event costs more. The model is built to know the
-difference.
+What sets it apart from the threshold alerts already on the market:
+
+- it **explains** every alert (falling fast, insulin still active, light on carbs),
+- it **cuts false alarms with context** instead of nagging (recent carbs can cover a
+  coming low, recent insulin can bring down a coming high), and it flags an unreliable
+  reading **out loud** ("check manually") rather than guessing or going silent,
+- and it watches the **slow drift** no consumer CGM surfaces.
+
+It is deliberately not balanced. In glucose care a missed low is far worse than a
+false alarm, so the alert errs toward warning.
 
 ## how it works
 
@@ -82,17 +99,20 @@ a 1% false-alarm rate.
 Everything is config-driven: the knobs live in
 [configs/default.yaml](configs/default.yaml), not hard-coded in scripts.
 
-Backend (the first start simulates a small cohort and fits the model, then caches it):
+Backend:
 
 ```bash
+python -m venv .venv
+.venv\Scripts\activate                               # Windows (use source .venv/bin/activate elsewhere)
 pip install -e .
-PYTHONPATH=src uvicorn medmaps.api.app:app --reload   # serves on :8000
+PYTHONPATH=src python scripts/generate_cohort.py     # pre-build the demo cohort cache
+PYTHONPATH=src uvicorn medmaps.api.app:app --port 8000
 ```
 
-Dashboard:
+Dashboard (second terminal):
 
 ```bash
-cd frontend && npm install && npm run dev             # opens on :5173
+cd frontend && npm install && npm run dev            # opens on :5173
 ```
 
 Reproduce the findings:
@@ -106,7 +126,5 @@ PYTHONPATH=src python scripts/clinical.py   # error grid and event detection
 
 ## roadmap
 
-- phase 1 `done` : glucose acute-warning core, end to end (model + abstention + explanations + clinical eval + dashboard)
-- phase 2 `sketching` : second vital on the same spine
-- phase 3 `sketching` : medication adherence as a model feature
-- phase 4 `sketching` : drift-watch lens
+- phase 1 `done` : glucose early-warning, end to end — model race, conformal abstention, glass-box explanations, clinical eval, safety-asymmetric alerts, drift watch, light personalization, and the live-monitor dashboard
+- next `sketching` : a second vital on the same spine, deeper personalization, a hosted demo
