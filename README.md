@@ -3,8 +3,7 @@
 # MedMaps
 
 An early-warning layer for continuous glucose monitors. It predicts a high or low
-before it happens, explains the call, and is tuned so a missed low never costs less
-than a false alarm.
+before it happens, explains the call, and would rather warn you early than miss a low.
 
 `status: phase 1 complete`
 
