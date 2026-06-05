@@ -10,6 +10,8 @@ than a false alarm.
 
 ## demo
 
+**[Try it live](https://ananyasdrafts.github.io/medmaps/)**
+
 ![MedMaps live monitor](docs/images/demo.gif)
 
 The dashboard plays a real CGM stream forward in time: the forecast and its
