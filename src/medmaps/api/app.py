@@ -46,3 +46,8 @@ def sample(
 @app.post("/predict")
 def predict(req: WindowRequest, service: MedMapsService = Depends(get_service)) -> dict:
     return service.predict_window(req.window)
+
+
+@app.get("/scenario")
+def scenario(kind: str = "event", service: MedMapsService = Depends(get_service)) -> dict:
+    return service.build_scenario(kind=kind)

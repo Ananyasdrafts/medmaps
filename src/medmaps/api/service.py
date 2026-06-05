@@ -10,9 +10,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from medmaps.alerts import decide_alert
 from medmaps.config import load_config
 from medmaps.data.simulate import simulate_cohort
-from medmaps.data.windowing import windows_by_patient
+from medmaps.data.windowing import make_windows, windows_by_patient
+from medmaps.drift import detect_drift
 from medmaps.explain.glassbox import GlassBoxForecaster
 from medmaps.uncertainty.abstain import ood_scores, ood_threshold
 from medmaps.uncertainty.conformal import conformity_scores, split_conformal_width
@@ -57,6 +59,7 @@ class MedMapsService:
         self._width = split_conformal_width(self._cal, self.alpha)
         self._ood_thr = ood_threshold(x_tr, percentile=99.0)
         self._test = (data["X_test"], data["y_test"], data["e_test"])
+        self._cohort = cohort
 
     def predict_window(self, window: list[list[float]]) -> dict:
         x = np.asarray(window, dtype=float)[None, ...]
@@ -121,4 +124,98 @@ class MedMapsService:
             "history_minutes": [(-(self.input_steps - 1 - k)) * self.sm for k in range(self.input_steps)],
             "history_cgm": [round(float(v), 1) for v in window[:, ci]],
             "true_future": None if ood else [round(float(v), 1) for v in y_te[i]],
+        }
+
+    def _personal_width(self, cal_df: pd.DataFrame) -> float | None:
+        """A conformal width calibrated on one patient's own history (personalization)."""
+        xc, yc, _ = make_windows(cal_df, self.input_steps, self.horizon_steps, FEATURES)
+        if len(xc) < 20:
+            return None
+        scores = conformity_scores(yc[:, self.idx30], self.model.predict(xc)[:, self.idx30])
+        return split_conformal_width(scores, self.alpha)
+
+    def build_scenario(self, kind: str = "event") -> dict:
+        """A playable scenario: one patient's stream advancing step by step, with the
+        forecast, the alert, the why, and a running drift status at each step.
+
+        Personalized per patient: the interval is calibrated on that patient's own
+        earlier data, and drift compares their recent window to their own baseline.
+        """
+        ci = FEATURES.index("cgm")
+        choi = FEATURES.index("cho")
+        boli = FEATURES.index("bolus")
+        isteps, hsteps, sm = self.input_steps, self.horizon_steps, self.sm
+
+        chosen = None
+        for name, g in self._cohort.groupby("patient", sort=False):
+            g = g.sort_values("time").reset_index(drop=True)
+            cut = int(len(g) * 0.6)
+            width = self._personal_width(g.iloc[:cut])
+            live = g.iloc[cut:].reset_index(drop=True)
+            if width is None or len(live) < isteps + hsteps + 6:
+                continue
+            feats = live[FEATURES].to_numpy(dtype=float)
+            cgm = feats[:, ci]
+            event_at = next(
+                (t for t in range(isteps, len(live) - hsteps)
+                 if cgm[t:t + hsteps].min() < self.hypo or cgm[t:t + hsteps].max() > self.hyper),
+                None,
+            )
+            if kind == "event" and event_at is None:
+                continue
+            start = max(isteps, (event_at - 18) if event_at is not None else isteps)
+            end = min(len(live) - hsteps, (event_at + 12) if event_at is not None else len(live) - hsteps)
+            chosen = (name, feats, cgm, width, start, end)
+            break
+
+        if chosen is None:  # fallback: first usable patient, whole live segment
+            name, g = next(iter(self._cohort.groupby("patient", sort=False)))
+            g = g.sort_values("time").reset_index(drop=True)
+            cut = int(len(g) * 0.6)
+            width = self._personal_width(g.iloc[:cut]) or self._width
+            live = g.iloc[cut:].reset_index(drop=True)
+            feats = live[FEATURES].to_numpy(dtype=float)
+            cgm = feats[:, ci]
+            start, end = isteps, len(live) - hsteps
+
+        frames = []
+        for t in range(start, end):
+            window = feats[t - isteps:t]
+            x = window[None, ...]
+            traj = self.model.predict(x)[0]
+            lower, upper = traj - width, traj + width
+            reliable = float(ood_scores(self._x_train, x)[0]) <= self._ood_thr
+            alert = decide_alert(
+                traj, lower, upper, hypo=self.hypo, hyper=self.hyper,
+                carbs_recent=float(window[:, choi].sum()),
+                recent_insulin=bool(window[-3:, boli].sum() > 0),
+                reliable=reliable, sample_minutes=sm,
+            )
+            contribs, names = self.model.explain(x, self.idx30)
+            order = np.argsort(-np.abs(contribs[0]))[:3]
+            d = detect_drift(cgm[:t]) if t >= 12 else None
+            frames.append({
+                "now_min": int(t * sm),
+                "forecast": [round(float(v), 1) for v in traj],
+                "lower": [round(float(v), 1) for v in lower],
+                "upper": [round(float(v), 1) for v in upper],
+                "alert": alert,
+                "drivers": [
+                    {"feature": names[i], "contribution": round(float(contribs[0, i]), 1)}
+                    for i in order
+                ],
+                "drift": None if d is None else {
+                    "status": d["status"], "reasons": d["reasons"],
+                    "time_in_range": d["recent"]["time_in_range"], "cv": d["recent"]["cv"],
+                },
+            })
+
+        return {
+            "patient": name,
+            "sample_minutes": sm,
+            "horizon_minutes": [(i + 1) * sm for i in range(hsteps)],
+            "thresholds": {"hypo": self.hypo, "hyper": self.hyper},
+            "actual": [{"min": int(k * sm), "cgm": round(float(cgm[k]), 1)}
+                       for k in range(min(end + hsteps, len(cgm)))],
+            "frames": frames,
         }
